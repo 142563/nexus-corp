@@ -32,7 +32,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: nexus-corp-api
-          type: web
-          property: url
+        sync: false
