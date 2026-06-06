@@ -1,0 +1,38 @@
+# render.yaml — Blueprint de infraestructura para Nexus-Corp en Render.com
+# Base de datos: Neon PostgreSQL (externa) — se configura manualmente en el dashboard.
+# NO almacenar credenciales aquí; este archivo va a GitHub.
+
+services:
+  # ── Backend: FastAPI con Docker ──────────────────────────────────────────
+  - type: web
+    name: nexus-corp-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # DATABASE_URL se configura en el dashboard de Render (no va en este archivo)
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+  # ── Frontend: React/Vite — Sitio Estático ────────────────────────────────
+  - type: web
+    name: nexus-corp-app
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: nexus-corp-api
+          type: web
+          property: url
